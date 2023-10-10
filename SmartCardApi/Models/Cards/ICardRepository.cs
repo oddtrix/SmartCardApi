@@ -1,4 +1,4 @@
-﻿namespace SmartCardApi.Models
+﻿namespace SmartCardApi.Models.Cards
 {
     public interface ICardRepository
     {

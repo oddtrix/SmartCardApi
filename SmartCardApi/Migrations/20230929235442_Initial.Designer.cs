@@ -5,13 +5,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SmartCardApi.Models;
+using SmartCardApi.Models.Cards;
 
 #nullable disable
 
 namespace SmartCardApi.Migrations
 {
-    [DbContext(typeof(CarDDbContext))]
+    [DbContext(typeof(CardDbContext))]
     [Migration("20230929235442_Initial")]
     partial class Initial
     {

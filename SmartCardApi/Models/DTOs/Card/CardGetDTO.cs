@@ -1,6 +1,7 @@
-﻿namespace SmartCardApi.Models
+﻿
+namespace SmartCardApi.Models.DTOs.Card
 {
-    public class Card
+    public class CardGetDTO
     {
         public Guid Id { get; set; }
 
@@ -8,6 +9,6 @@
 
         public string Translation { get; set; }
 
-        public byte LearningRate { get; set; }
+        public int LearningRate { get; set; } = 0;
     }
 }

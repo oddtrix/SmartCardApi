@@ -1,10 +1,10 @@
-﻿namespace SmartCardApi.Models
+﻿namespace SmartCardApi.Models.Cards
 {
     public class CardRepository : ICardRepository
     {
-        private CarDDbContext context;
+        private CardDbContext context;
 
-        public CardRepository(CarDDbContext cartDbContext)
+        public CardRepository(CardDbContext cartDbContext)
         {
             context = cartDbContext;
         }
@@ -15,6 +15,7 @@
 
         public Card Create(Card card)
         {
+            card.Id = Guid.Empty;
             context.Cards.Add(card);
             context.SaveChanges();
             return card;
