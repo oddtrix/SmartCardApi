@@ -3,10 +3,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.IdentityModel.Tokens;
+using SmartCardApi.Models.DTOs.Authentication.LogIn;
 using SmartCardApi.Models.DTOs.Authentication.SignUp;
 using SmartCardApi.Models.Identity;
-using SmartCardService.Models;
-using SmartCardService.Services;
+using SmartCardApi.Models.User;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace SmartCardApi.Controllers
 {
@@ -14,31 +18,35 @@ namespace SmartCardApi.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private UserManager<AppUser> userManager;
+        private UserManager<AppIdentityUser> userManager;
 
-        private RoleManager<IdentityRole> roleManager;
+        private RoleManager<IdentityRole<Guid>> roleManager;
 
-        private IEmailService emailService;
+        private SignInManager<AppIdentityUser> signInManager;
+
+        private IAppDomainRepository domainRepository;
 
         private IConfiguration configuration;
 
         private IMapper mapper;
 
-        public AuthenticationController(UserManager<AppUser> userManager,
-                                        RoleManager<IdentityRole> roleManager,
-                                        IEmailService emailService,
+        public AuthenticationController(UserManager<AppIdentityUser> userManager,
+                                        RoleManager<IdentityRole<Guid>> roleManager,
+                                        SignInManager<AppIdentityUser> signInManager,
+                                        IAppDomainRepository domainRepository,
                                         IConfiguration configuration,
                                         IMapper mapper)
         {
             this.userManager = userManager;
             this.roleManager = roleManager;
-            this.emailService = emailService;
+            this.signInManager = signInManager;
+            this.domainRepository = domainRepository;
             this.configuration = configuration;
             this.mapper = mapper;
         }
 
         [HttpPost]
-        public async Task<IActionResult> Register([FromBody] UserSignupDTO userSignupDTO, string role)
+        public async Task<IActionResult> Register([FromBody] UserSignupDTO userSignupDTO, string role = "User")
         {
             var userExist = await userManager.FindByEmailAsync(userSignupDTO.Email);
             if (userExist != null) 
@@ -46,11 +54,15 @@ namespace SmartCardApi.Controllers
                 return StatusCode(StatusCodes.Status403Forbidden, new { Status = "Error", message = "User already exists"});
             }
 
-            var newUser = mapper.Map<AppUser>(userSignupDTO);
-
+            var newUser = mapper.Map<AppIdentityUser>(userSignupDTO);
+            
             if(await roleManager.RoleExistsAsync(role))
             {
                 IdentityResult result = await userManager.CreateAsync(newUser, userSignupDTO.Password);
+                
+                var addedUser = await userManager.FindByEmailAsync(newUser.Email);
+                var newDomainUser = mapper.Map<DomainUser>(addedUser);
+                this.domainRepository.Create(newDomainUser);
 
                 if (!result.Succeeded)
                 {
@@ -59,12 +71,6 @@ namespace SmartCardApi.Controllers
                 }
                 
                 await userManager.AddToRoleAsync(newUser, role);
-
-                var token = await userManager.GenerateEmailConfirmationTokenAsync(newUser);
-                string http = configuration["Jwt:Issuer"];
-                var confirmLink = http.Substring(0, http.Length - 1) + Url.Action(nameof(ConfirmEmail), "Authentication", new { token, email = newUser.Email });
-                var message = new Message(new string[] { newUser.Email! }, "Confirmation email link", confirmLink);
-                emailService.SendEmail(message);
 
                 return StatusCode(StatusCodes.Status200OK,
                             new { Status = "Success", message = "User created successfully." });
@@ -77,24 +83,79 @@ namespace SmartCardApi.Controllers
             
         }
 
-        [HttpGet]
-        public async Task<IActionResult> ConfirmEmail(string token, string email)
+        [HttpPost]
+        public async Task<IActionResult> Login([FromBody] UserLoginDTO userLoginDTO)
         {
-            var user = await userManager.FindByEmailAsync(email);
-            if(user != null)
+            var user = await userManager.FindByEmailAsync(userLoginDTO.Email);
+            if (user != null && await userManager.CheckPasswordAsync(user, userLoginDTO.Password))
             {
-                var result = await userManager.ConfirmEmailAsync(user, token);
-                if (result.Succeeded)
+                var authClaim = new List<Claim>
                 {
-                    return StatusCode(StatusCodes.Status200OK, new
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()) 
+                };
+
+                var userRoles = await userManager.GetRolesAsync(user);
+                authClaim.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
+
+                foreach (var role in userRoles)
+                {
+                    authClaim.Add(new Claim(ClaimTypes.Role, role));
+                }
+
+                var jwtToken = GetToken(authClaim);
+
+                await signInManager.SignOutAsync();
+
+                var signInResult = await signInManager.PasswordSignInAsync(user, userLoginDTO.Password, false, false);
+
+                if (signInResult.Succeeded)
+                {
+                    return Ok(new
                     {
-                        Status = "Success",
-                        message = "Email has been confirmed"
+                        token = new JwtSecurityTokenHandler().WriteToken(jwtToken),
+                        expiration = jwtToken.ValidTo
                     });
-                }  
-            }   
-            return StatusCode(StatusCodes.Status500InternalServerError,
-                            new { Status = "Error", message = "This user doesn`t exist" });
+                }
+            }
+
+            return Unauthorized();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout()
+        {
+            await signInManager.SignOutAsync();
+            return Ok();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Me()
+        {
+            var userNameIdentifier = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString();
+            var userId = Guid.Parse(userNameIdentifier);
+            var user = await userManager.FindByIdAsync(userId.ToString());
+            if (user != null)
+            {
+                return Ok(userId);
+            }
+
+            return Unauthorized();
+        }
+
+        private JwtSecurityToken GetToken(List<Claim> authClaims)
+        {
+            var authSignInToken = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+
+            var token = new JwtSecurityToken(
+                    issuer: configuration["Jwt:Issuer"],
+                    audience: configuration["Jwt:Audience"],
+                    claims: authClaims,
+                    expires: DateTime.Now.AddMinutes(30),
+                    signingCredentials: new SigningCredentials(authSignInToken, SecurityAlgorithms.HmacSha256)
+                );
+
+            return token;
         }
     }
 }

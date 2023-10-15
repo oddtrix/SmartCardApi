@@ -2,11 +2,12 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using SmartCardApi.Contexts;
 using SmartCardApi.Models.AutoMapperConfig;
 using SmartCardApi.Models.Cards;
 using SmartCardApi.Models.Identity;
-using SmartCardService.Models;
-using SmartCardService.Services;
+using SmartCardApi.Models.User;
 using System.Text;
 
 namespace SmartCardApi
@@ -23,19 +24,58 @@ namespace SmartCardApi
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(option =>
+            {
+                option.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Api", Version = "v1" });
+                option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter a valid toket",
+                    Name = "Authonrization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
+                });
+                option.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[]{}
+                    }
+                });
+            });
+
+            //Database
+            string connectionString = this.Configuration["ConnectionString:DefaultConnection"];
+            string identityString = this.Configuration["ConnectionString:IdentityConnection"];
+
+            services.AddDbContext<AppDomainDbContext>(options =>
+            {
+                options.UseSqlServer(connectionString);
+            });
+
+            services.AddDbContext<AppIdentityDbContext>(options =>
+            {
+                options.UseSqlServer(identityString);
+            });
 
             // Identity conf
-            services.AddIdentity<AppUser, IdentityRole>()
+            services.AddIdentity<AppIdentityUser, IdentityRole<Guid>>()
                 .AddEntityFrameworkStores<AppIdentityDbContext>()
                 .AddDefaultTokenProviders();
-
-            services.Configure<IdentityOptions>(
-                opts => opts.SignIn.RequireConfirmedEmail = true);
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
                 {
+                    options.SaveToken = true;
+                    options.RequireHttpsMetadata = false;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
@@ -51,27 +91,9 @@ namespace SmartCardApi
             //AutoMapper
             services.AddAutoMapper(typeof(AutoMapperConfigProfile));
 
-            //Database
-            string connectionString = this.Configuration["ConnectionString:DefaultConnection"];
-
-            services.AddDbContext<CardDbContext>(options =>
-            {
-                options.UseSqlServer(connectionString);
-            });
-
-            services.AddDbContext<AppIdentityDbContext>(options =>
-            {
-                options.UseSqlServer(connectionString);
-            });
-
-            //Email Config
-            var emailConfig = Configuration.GetSection("EmailConfiguration")
-                                           .Get<EmailConfiguration>();
-
             // DI
             services.AddScoped<ICardRepository, CardRepository>();
-            services.AddSingleton(emailConfig);
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IAppDomainRepository, AppDomainRepository>();
         }
 
         public void Configure(IApplicationBuilder app, IHostEnvironment env)

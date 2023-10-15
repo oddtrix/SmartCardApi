@@ -1,21 +1,24 @@
-﻿namespace SmartCardApi.Models.Cards
+﻿using SmartCardApi.Contexts;
+
+namespace SmartCardApi.Models.Cards
 {
     public class CardRepository : ICardRepository
     {
-        private CardDbContext context;
+        private AppDomainDbContext context;
 
-        public CardRepository(CardDbContext cartDbContext)
+        public CardRepository(AppDomainDbContext cartDbContext)
         {
-            context = cartDbContext;
+            this.context = cartDbContext;
         }
 
         public Card this[Guid id] => context.Cards.First(x => x.Id == id);
 
         public IEnumerable<Card> Cards => context.Cards;
 
-        public Card Create(Card card)
+        public Card Create(Card card, Guid userId)
         {
             card.Id = Guid.Empty;
+            card.UserId = userId;
             context.Cards.Add(card);
             context.SaveChanges();
             return card;

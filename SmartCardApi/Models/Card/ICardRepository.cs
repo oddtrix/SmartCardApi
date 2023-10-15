@@ -6,7 +6,7 @@
 
         Card this[Guid id] { get; }
 
-        Card Create(Card card);
+        Card Create(Card card, Guid userId);
 
         Card Update(Card card);
 

@@ -3,12 +3,10 @@ using SmartCardApi.Models.Cards;
 
 namespace SmartCardApi.Models.Identity
 {
-    public class AppUser : IdentityUser
+    public class AppIdentityUser : IdentityUser<Guid>
     {
-        /*public IEnumerable<Card> Cards { get; set; }  */
-
         public string Name { get; set; }
 
-        public string Surname { get; set; } 
+        public string Surname { get; set; }
     }
 }
