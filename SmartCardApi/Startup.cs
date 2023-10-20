@@ -71,7 +71,11 @@ namespace SmartCardApi
                 .AddEntityFrameworkStores<AppIdentityDbContext>()
                 .AddDefaultTokenProviders();
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            services.AddAuthentication(auth =>
+            {
+                auth.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                auth.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme; // WTF WHY THIS FIXED ALL THIS SHIT 
+            })
                 .AddJwtBearer(options =>
                 {
                     options.SaveToken = true;
@@ -87,6 +91,14 @@ namespace SmartCardApi
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["Jwt:Key"]))
                     }; 
                 });
+
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+                });
+            });
 
             //AutoMapper
             services.AddAutoMapper(typeof(AutoMapperConfigProfile));
@@ -105,10 +117,7 @@ namespace SmartCardApi
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseCors(options =>
-            {
-                options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-            });
+            app.UseCors();
 
             app.UseStatusCodePages();
             app.UseStaticFiles();  

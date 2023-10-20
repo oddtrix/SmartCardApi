@@ -17,7 +17,7 @@ namespace SmartCardApi.Controllers
 
         public DomainController(ICardRepository repository, IMapper mapper)
         {
-            this.repository = repository;   
+            this.repository = repository;
             this.mapper = mapper;
         }
 
@@ -33,10 +33,10 @@ namespace SmartCardApi.Controllers
         }
 
         [Authorize(Roles = "User,Admin")]
-        [HttpGet()]
-        public ActionResult<IEnumerable<CardGetDTO>> Get()
+        [HttpGet("{userId:guid}")]
+        public ActionResult<IEnumerable<CardGetDTO>> Get(Guid userId)
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            //var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
 
             var cards = this.repository.Cards.Where(c => c.UserId == userId).ToList();
             var convertedCards = mapper.Map<IEnumerable<CardGetDTO>>(cards);
@@ -80,8 +80,8 @@ namespace SmartCardApi.Controllers
         }
 
         [Authorize(Roles = "User,Admin")]
-        /*[HttpDelete]*/
-        [HttpDelete("guid")] // <-- react shit
+        [HttpDelete]
+        /*[HttpDelete("guid")] // <-- react shit*/
         public ActionResult Delete([FromBody]CardDeleteDTO dto) 
         {
             var deletedCard = mapper.Map<Card>(dto);
