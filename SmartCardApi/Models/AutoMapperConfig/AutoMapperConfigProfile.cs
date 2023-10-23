@@ -29,7 +29,7 @@ namespace SmartCardApi.Models.AutoMapperConfig
 
             CreateMap<AppIdentityUser, DomainUser>();
 
-            CreateMap<CardGetDTO, Card>();
+            //CreateMap<CardGetDTO, Card>();
         }
     }
 }

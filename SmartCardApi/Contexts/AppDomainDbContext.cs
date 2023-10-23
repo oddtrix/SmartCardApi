@@ -18,14 +18,11 @@ namespace SmartCardApi.Contexts
                 .HasKey(x => x.Id);
 
             modelBuilder.Entity<Card>()
-                .Property(x => x.LearningRate).HasDefaultValue(0)
-                .HasField("databaseLearningRate").UsePropertyAccessMode(PropertyAccessMode.Field);
+                .Property(x => x.LearningRate).HasDefaultValue(0).IsRequired(true)
+            .HasField("databaseLearningRate").UsePropertyAccessMode(PropertyAccessMode.PreferFieldDuringConstruction);
 
             modelBuilder.Entity<Card>()
                 .Property(x => x.Word).IsRequired(true);
-
-            modelBuilder.Entity<Card>()
-                .Property(x => x.LearningRate).IsRequired(true);
 
             modelBuilder.Entity<Card>()
                 .HasOne(c => c.User)

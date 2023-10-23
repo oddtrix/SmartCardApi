@@ -18,11 +18,12 @@ namespace SmartCardApi.Models.Cards
         {
             get => this.databaseLearningRate;
             set {
-                if(this.databaseLearningRate >= 0 &&
-                    this.databaseLearningRate <= 100)
+                if (this.databaseLearningRate < 0 || this.databaseLearningRate > 100)
                 {
-                    this.databaseLearningRate = value;
-                };
+                    this.databaseLearningRate = this.databaseLearningRate;
+                }    
+
+                this.databaseLearningRate = value;
             }
         }
 

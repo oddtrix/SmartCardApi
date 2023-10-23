@@ -93,15 +93,24 @@ namespace SmartCardApi.Controllers
         [HttpPut]
         public ActionResult<Card> IncreaseLearningRate([FromBody] CardIncreaseLearningRateDTO dto)
         {
-            var card = this.GetCardById(dto.Id);
+            Card card = this.repository[dto.Id];
+            card.LearningRate += 1;
+            if (card.LearningRate == 101) card.LearningRate = 100;
             
-            
-            Card userCard = mapper.Map<Card>(((OkObjectResult)card.Result).Value);
-            userCard.LearningRate += 1;
-            userCard.UserId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            this.repository.Update(card);
+            return Ok(card);
+        }
 
-            this.repository.Update(userCard);
-            return Ok(userCard);
+        [Authorize(Roles = "User,Admin")]
+        [HttpPut]
+        public ActionResult<Card> DecreaseLearningRate([FromBody] CardIncreaseLearningRateDTO dto)
+        {
+            Card card = this.repository[dto.Id];
+            card.LearningRate -= 1;
+            if(card.LearningRate == -1) card.LearningRate = 0;         
+            
+            this.repository.Update(card);
+            return Ok(card);
         }
     }
 }

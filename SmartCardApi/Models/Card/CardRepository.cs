@@ -1,4 +1,5 @@
-﻿using SmartCardApi.Contexts;
+﻿using Microsoft.EntityFrameworkCore;
+using SmartCardApi.Contexts;
 
 namespace SmartCardApi.Models.Cards
 {
