@@ -119,7 +119,7 @@ namespace SmartCardApi.Controllers
                 }
             }
 
-            return Unauthorized();
+            return NotFound();
         }
 
         [HttpGet]
