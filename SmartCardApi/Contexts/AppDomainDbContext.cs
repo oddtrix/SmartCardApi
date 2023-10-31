@@ -25,6 +25,9 @@ namespace SmartCardApi.Contexts
                 .Property(x => x.Word).IsRequired(true);
 
             modelBuilder.Entity<Card>()
+                .Property(x => x.Translation).IsRequired(true);
+
+            modelBuilder.Entity<Card>()
                 .HasOne(c => c.User)
                 .WithMany(u => u.Cards)
                 .HasForeignKey(c => c.UserId);

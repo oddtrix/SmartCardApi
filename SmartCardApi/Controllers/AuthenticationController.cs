@@ -18,11 +18,11 @@ namespace SmartCardApi.Controllers
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private UserManager<AppIdentityUser> userManager;
+        private SignInManager<AppIdentityUser> signInManager;
 
         private RoleManager<IdentityRole<Guid>> roleManager;
 
-        private SignInManager<AppIdentityUser> signInManager;
+        private UserManager<AppIdentityUser> userManager;
 
         private IAppDomainRepository domainRepository;
 
@@ -30,18 +30,18 @@ namespace SmartCardApi.Controllers
 
         private IMapper mapper;
 
-        public AuthenticationController(UserManager<AppIdentityUser> userManager,
+        public AuthenticationController(SignInManager<AppIdentityUser> signInManager,
                                         RoleManager<IdentityRole<Guid>> roleManager,
-                                        SignInManager<AppIdentityUser> signInManager,
+                                        UserManager<AppIdentityUser> userManager,
                                         IAppDomainRepository domainRepository,
                                         IConfiguration configuration,
                                         IMapper mapper)
         {
+            this.domainRepository = domainRepository;
+            this.signInManager = signInManager;
+            this.configuration = configuration;
             this.userManager = userManager;
             this.roleManager = roleManager;
-            this.signInManager = signInManager;
-            this.domainRepository = domainRepository;
-            this.configuration = configuration;
             this.mapper = mapper;
         }
 
@@ -97,13 +97,13 @@ namespace SmartCardApi.Controllers
 
                 var userRoles = await userManager.GetRolesAsync(user);
                 authClaim.Add(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-
+                authClaim.Add(new Claim(ClaimTypes.Name, user.UserName.ToString()));
                 foreach (var role in userRoles)
                 {
                     authClaim.Add(new Claim(ClaimTypes.Role, role));
                 }
 
-                var jwtToken = GetToken(authClaim);
+                var jwtToken = this.GetToken(authClaim);
 
                 await signInManager.SignOutAsync();
 

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using SmartCardApi.Models.Cards;
 using SmartCardApi.Models.DTOs.Authentication.LogIn;
 using SmartCardApi.Models.DTOs.Authentication.SignUp;
@@ -13,23 +14,19 @@ namespace SmartCardApi.Models.AutoMapperConfig
     {
         public AutoMapperConfigProfile() 
         {
-            CreateMap<CardCreateDTO, Card>();
+            CreateMap<UserSignupDTO, AppIdentityUser>();
 
-            CreateMap<Card, CardGetDTO>();
+            CreateMap<AppIdentityUser, DomainUser>();
+
+            CreateMap<AppIdentityUser, UserDTO>();
+
+            CreateMap<CardCreateDTO, Card>();
 
             CreateMap<CardUpdateDTO, Card>();
 
             CreateMap<CardDeleteDTO, Card>();
 
-            CreateMap<UserSignupDTO, AppIdentityUser>();
-
-            /*            CreateMap<UserLoginDTO, AppUser>();*/
-
-            CreateMap<AppIdentityUser, UserDTO>();
-
-            CreateMap<AppIdentityUser, DomainUser>();
-
-            //CreateMap<CardGetDTO, Card>();
+            CreateMap<Card, CardGetDTO>();
         }
     }
 }

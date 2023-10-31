@@ -1,6 +1,4 @@
-﻿using SmartCardApi.Models.Cards;
-
-namespace SmartCardApi.Models.User
+﻿namespace SmartCardApi.Models.User
 {
     public interface IAppDomainRepository
     {

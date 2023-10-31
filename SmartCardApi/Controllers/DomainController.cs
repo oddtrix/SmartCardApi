@@ -21,6 +21,16 @@ namespace SmartCardApi.Controllers
             this.mapper = mapper;
         }
 
+        [Authorize(Roles = "User,Admin")]
+        [HttpPost]
+        public ActionResult<Card> Create([FromBody] CardCreateDTO dto)
+        {
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+
+            var newCard = mapper.Map<Card>(dto);
+            return Created($"~/api/{nameof(DomainController)}/{nameof(this.Create)}", this.repository.Create(newCard, userId));
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public ActionResult<IEnumerable<CardGetDTO>> GetAllCards()
@@ -28,7 +38,6 @@ namespace SmartCardApi.Controllers
             var cards = this.repository.Cards.ToList();
             var convertedCards = mapper.Map<IEnumerable<CardGetDTO>>(cards);
 
-            /*return this.Ok(this.repository.Cards ?? new List<Card>());*/
             return this.Ok(convertedCards);
         }
 
@@ -36,12 +45,9 @@ namespace SmartCardApi.Controllers
         [HttpGet("{userId:guid}")]
         public ActionResult<IEnumerable<CardGetDTO>> Get(Guid userId)
         {
-            //var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
-
             var cards = this.repository.Cards.Where(c => c.UserId == userId).ToList();
             var convertedCards = mapper.Map<IEnumerable<CardGetDTO>>(cards);
 
-            /*return this.Ok(this.repository.Cards ?? new List<Card>());*/
             return this.Ok(convertedCards);
         }
 
@@ -52,21 +58,7 @@ namespace SmartCardApi.Controllers
             var card = this.repository.Cards.FirstOrDefault(c => c.Id == cardId);
             var convertedCard = mapper.Map<CardGetDTO>(card);
 
-            /*return this.Ok(this.repository.Cards ?? new List<Card>());*/
             return this.Ok(convertedCard);
-        }
-
-        [Authorize(Roles = "User,Admin")]
-        [HttpPost]
-        public ActionResult<Card> Create([FromBody] CardCreateDTO dto)
-        {
-            /*if (!User.Identity.IsAuthenticated)
-                return StatusCode(StatusCodes.Status401Unauthorized);*/
-
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
-
-            var newCard = mapper.Map<Card>(dto); 
-            return Created($"~/api/{nameof(DomainController)}/{nameof(this.Create)}", this.repository.Create(newCard, userId));
         }
 
         [Authorize(Roles = "User,Admin")]
@@ -77,16 +69,6 @@ namespace SmartCardApi.Controllers
             editedCard.UserId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
             this.repository.Update(editedCard);
             return Ok(editedCard);
-        }
-
-        [Authorize(Roles = "User,Admin")]
-        [HttpDelete]
-        /*[HttpDelete("guid")] // <-- react shit*/
-        public ActionResult Delete([FromBody]CardDeleteDTO dto) 
-        {
-            var deletedCard = mapper.Map<Card>(dto);
-            this.repository.Delete(deletedCard.Id);
-            return Ok($"Card with id: {deletedCard.Id} was deleted");
         }
 
         [Authorize(Roles = "User,Admin")]
@@ -111,6 +93,15 @@ namespace SmartCardApi.Controllers
             
             this.repository.Update(card);
             return Ok(card);
+        }
+
+        [Authorize(Roles = "User,Admin")]
+        [HttpDelete]
+        public ActionResult Delete([FromBody] CardDeleteDTO dto)
+        {
+            var deletedCard = mapper.Map<Card>(dto);
+            this.repository.Delete(deletedCard.Id);
+            return Ok($"Card with id: {deletedCard.Id} was deleted");
         }
     }
 }
