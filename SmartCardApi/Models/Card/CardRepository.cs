@@ -12,7 +12,7 @@ namespace SmartCardApi.Models.Cards
             this.context = cartDbContext;
         }
 
-        public Card this[Guid id] => context.Cards.First(x => x.Id == id);
+        public Card this[Guid id] => context.Cards.Find(id);
 
         public IEnumerable<Card> Cards => context.Cards;
 

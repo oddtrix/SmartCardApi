@@ -1,6 +1,4 @@
-﻿using SmartCardApi.Models.Identity;
-using SmartCardApi.Models.User;
-using System.ComponentModel.DataAnnotations;
+﻿using SmartCardApi.Models.User;
 
 namespace SmartCardApi.Models.Cards
 {
@@ -17,13 +15,12 @@ namespace SmartCardApi.Models.Cards
         public int LearningRate
         {
             get => this.databaseLearningRate;
-            set {
-                if (this.databaseLearningRate < 0 || this.databaseLearningRate > 100)
+            set
+            {
+                if (this.databaseLearningRate > 0 || this.databaseLearningRate < 100)
                 {
-                    this.databaseLearningRate = this.databaseLearningRate;
-                }    
-
-                this.databaseLearningRate = value;
+                    this.databaseLearningRate = value;
+                }
             }
         }
 

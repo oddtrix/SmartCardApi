@@ -3,6 +3,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SmartCardApi.BLL.BL;
+using SmartCardApi.BLL.Services;
+using SmartCardApi.BusinessLayer.Interfaces;
+using SmartCardApi.BusinessLayer.Services;
 using SmartCardApi.Contexts;
 using SmartCardApi.Models.AutoMapperConfig;
 using SmartCardApi.Models.Cards;
@@ -106,6 +110,9 @@ namespace SmartCardApi
             // DI
             services.AddScoped<ICardRepository, CardRepository>();
             services.AddScoped<IAppDomainRepository, AppDomainRepository>();
+            services.AddScoped<ICardService, CardService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IAdminService, AdminService>();
         }
 
         public void Configure(IApplicationBuilder app, IHostEnvironment env)

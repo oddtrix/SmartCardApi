@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace SmartCardApi.Models.DTOs.Card
+﻿namespace SmartCardApi.Models.DTOs.Card
 {
     public class CardCreateDTO
     {

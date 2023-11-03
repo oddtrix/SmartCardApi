@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using SmartCardApi.Models.Cards;
 
 namespace SmartCardApi.Models.Identity
 {

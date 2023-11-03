@@ -1,9 +1,8 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartCardApi.BusinessLayer.Interfaces;
 using SmartCardApi.Models.Cards;
 using SmartCardApi.Models.DTOs.Card;
-using System.Security.Authentication;
 using System.Security.Claims;
 
 namespace SmartCardApi.Controllers
@@ -11,14 +10,11 @@ namespace SmartCardApi.Controllers
     [Route("api/[controller]/[action]")]
     public class DomainController : Controller
     {
-        private ICardRepository repository;
+        private ICardService cardService;
 
-        private IMapper mapper;
-
-        public DomainController(ICardRepository repository, IMapper mapper)
+        public DomainController(ICardService cardService)
         {
-            this.repository = repository;
-            this.mapper = mapper;
+            this.cardService = cardService;
         }
 
         [Authorize(Roles = "User,Admin")]
@@ -26,48 +22,40 @@ namespace SmartCardApi.Controllers
         public ActionResult<Card> Create([FromBody] CardCreateDTO dto)
         {
             var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
-
-            var newCard = mapper.Map<Card>(dto);
-            return Created($"~/api/{nameof(DomainController)}/{nameof(this.Create)}", this.repository.Create(newCard, userId));
+            var newCard = this.cardService.CreateCard(dto, userId);
+            return Created($"~/api/{nameof(DomainController)}/{nameof(this.Create)}", newCard);
         }
 
         [Authorize(Roles = "Admin")]
         [HttpGet]
         public ActionResult<IEnumerable<CardGetDTO>> GetAllCards()
         {
-            var cards = this.repository.Cards.ToList();
-            var convertedCards = mapper.Map<IEnumerable<CardGetDTO>>(cards);
-
-            return this.Ok(convertedCards);
+            var cards = this.cardService.GetAllCards();
+            return this.Ok(cards);
         }
 
         [Authorize(Roles = "User,Admin")]
         [HttpGet("{userId:guid}")]
         public ActionResult<IEnumerable<CardGetDTO>> Get(Guid userId)
         {
-            var cards = this.repository.Cards.Where(c => c.UserId == userId).ToList();
-            var convertedCards = mapper.Map<IEnumerable<CardGetDTO>>(cards);
-
-            return this.Ok(convertedCards);
+            var cards = this.cardService.GetCardsByUserId(userId);
+            return this.Ok(cards);
         }
 
         [Authorize(Roles = "User,Admin")]
-        [HttpGet("guid")] //test 
-        public ActionResult<CardGetDTO> GetCardById(Guid cardId) //test
+        [HttpGet("guid")]
+        public ActionResult<CardGetDTO> GetCardById(Guid cardId)
         {
-            var card = this.repository.Cards.FirstOrDefault(c => c.Id == cardId);
-            var convertedCard = mapper.Map<CardGetDTO>(card);
-
-            return this.Ok(convertedCard);
+            var card = this.cardService.GetCardById(cardId);
+            return this.Ok(card);
         }
 
         [Authorize(Roles = "User,Admin")]
         [HttpPut]
         public ActionResult<Card> Update([FromBody] CardUpdateDTO dto) 
         {
-            var editedCard = mapper.Map<Card>(dto);
-            editedCard.UserId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
-            this.repository.Update(editedCard);
+            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            var editedCard = this.cardService.UpdateCard(dto, userId);
             return Ok(editedCard);
         }
 
@@ -75,11 +63,7 @@ namespace SmartCardApi.Controllers
         [HttpPut]
         public ActionResult<Card> IncreaseLearningRate([FromBody] CardIncreaseLearningRateDTO dto)
         {
-            Card card = this.repository[dto.Id];
-            card.LearningRate += 1;
-            if (card.LearningRate == 101) card.LearningRate = 100;
-            
-            this.repository.Update(card);
+            var card = this.cardService.IncreaseLearningRate(dto.Id);
             return Ok(card);
         }
 
@@ -87,11 +71,7 @@ namespace SmartCardApi.Controllers
         [HttpPut]
         public ActionResult<Card> DecreaseLearningRate([FromBody] CardIncreaseLearningRateDTO dto)
         {
-            Card card = this.repository[dto.Id];
-            card.LearningRate -= 1;
-            if(card.LearningRate == -1) card.LearningRate = 0;         
-            
-            this.repository.Update(card);
+            var card = this.cardService.DecreaseLearningRate(dto.Id);
             return Ok(card);
         }
 
@@ -99,9 +79,8 @@ namespace SmartCardApi.Controllers
         [HttpDelete]
         public ActionResult Delete([FromBody] CardDeleteDTO dto)
         {
-            var deletedCard = mapper.Map<Card>(dto);
-            this.repository.Delete(deletedCard.Id);
-            return Ok($"Card with id: {deletedCard.Id} was deleted");
+            this.cardService.DeleteCard(dto.Id);
+            return Ok($"Card with id: {dto.Id} was deleted");
         }
     }
 }
