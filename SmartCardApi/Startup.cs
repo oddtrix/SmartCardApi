@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using SmartCardApi.BLL.BL;
 using SmartCardApi.BLL.Services;
 using SmartCardApi.BusinessLayer.Interfaces;
 using SmartCardApi.BusinessLayer.Services;
