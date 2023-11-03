@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using SmartCardApi.BusinessLayer.Interfaces;
 using SmartCardApi.Models.DTOs.Authentication.LogIn;
 using SmartCardApi.Models.DTOs.Authentication.SignUp;
@@ -59,7 +60,8 @@ namespace SmartCardApi.Controllers
         [HttpGet]
         public async Task<IActionResult> Me()
         {
-            var userId = Guid.Parse(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value);
+            var userNameIdentifier = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString();
+            var userId = Guid.Parse(userNameIdentifier);
 
             var meResult = await this.authService.MeAsync(userId);
 
@@ -69,6 +71,7 @@ namespace SmartCardApi.Controllers
             }
 
             return BadRequest(meResult);
+
         }
     }
 }
