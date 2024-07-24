@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using ApplicationCore.Interfaces;
+using Domain.AutoMapperConfig;
+using Domain.Identity;
+using Domain.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -7,9 +11,7 @@ using SmartCardApi.BLL.Services;
 using SmartCardApi.BusinessLayer.Interfaces;
 using SmartCardApi.BusinessLayer.Services;
 using SmartCardApi.Contexts;
-using SmartCardApi.Models.AutoMapperConfig;
 using SmartCardApi.Models.Cards;
-using SmartCardApi.Models.Identity;
 using SmartCardApi.Models.User;
 using System.Text;
 
@@ -112,7 +114,7 @@ namespace SmartCardApi
             services.AddScoped<ICardRepository, CardRepository>();
             services.AddScoped<IAppDomainRepository, AppDomainRepository>();
             services.AddScoped<ICardService, CardService>();
-            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IJwtAuthService, AuthService>();
             services.AddScoped<IAdminService, AdminService>();
         }
 

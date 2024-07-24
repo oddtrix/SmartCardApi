@@ -1,23 +1,23 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using ApplicationCore.Interfaces;
+using Domain.DTOs.Authentication.LogIn;
+using Domain.DTOs.Authentication.SignUp;
 using Microsoft.AspNetCore.Mvc;
-using SmartCardApi.BusinessLayer.Interfaces;
-using SmartCardApi.Models.DTOs.Authentication.LogIn;
-using SmartCardApi.Models.DTOs.Authentication.SignUp;
 using System.Security.Claims;
 
 namespace SmartCardApi.Controllers
 {
-    [Route("api/[controller]/[action]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
-        private IAuthService authService;
+        private IJwtAuthService authService;
 
-        public AuthenticationController(IAuthService authService)
+        public AuthenticationController(IJwtAuthService authService)
         {
             this.authService = authService;
         }
 
+        [Route("register")]
         [HttpPost]
         public async Task<IActionResult> Register([FromBody] UserSignupDTO userSignupDTO, string role = "User")
         {
@@ -31,6 +31,7 @@ namespace SmartCardApi.Controllers
             return BadRequest(registerResult);
         }
 
+        [Route("login")]
         [HttpPost]
         public async Task<IActionResult> Login([FromBody] UserLoginDTO userLoginDTO)
         {
@@ -44,7 +45,8 @@ namespace SmartCardApi.Controllers
             return BadRequest(loginResult);
         }
 
-        [HttpGet]
+        [Route("logout")]
+        [HttpPost]
         public async Task<IActionResult> Logout()
         {
             var logoutResult = await this.authService.LogoutAsync();
@@ -57,6 +59,7 @@ namespace SmartCardApi.Controllers
             return BadRequest(logoutResult);
         }
 
+        [Route("me")]
         [HttpGet]
         public async Task<IActionResult> Me()
         {
