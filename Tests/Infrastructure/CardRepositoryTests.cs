@@ -1,7 +1,7 @@
 ﻿using SmartCardApi.Contexts;
 using SmartCardApi.Models.Cards;
 
-namespace Tests.Infrastructure.DataTests
+namespace Tests.Infrastructure
 {
     [TestFixture]
     public class CardRepositoryTests

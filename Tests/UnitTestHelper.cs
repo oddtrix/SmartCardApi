@@ -1,9 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Domain.AutoMapperConfig;
+using Microsoft.EntityFrameworkCore;
 using SmartCardApi.Contexts;
 using SmartCardApi.Models.Cards;
 using SmartCardApi.Models.User;
 
-namespace Tests.Infrastructure
+namespace Tests
 {
     internal static class UnitTestHelper
     {
@@ -19,6 +21,14 @@ namespace Tests.Infrastructure
             }
 
             return options;
+        }
+
+        public static IMapper CreateMapperProfile()
+        {
+            var myProfile = new AutoMapperConfigProfile();
+            var configuration = new MapperConfiguration(cfg => cfg.AddProfile(myProfile));
+
+            return new Mapper(configuration);
         }
 
         public static void SeedData(AppDomainDbContext context)

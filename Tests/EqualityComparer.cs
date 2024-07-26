@@ -2,7 +2,7 @@
 using SmartCardApi.Models.User;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Tests.Infrastructure
+namespace Tests
 {
     internal class DomainUserEqualityComparer : IEqualityComparer<DomainUser>
     {
