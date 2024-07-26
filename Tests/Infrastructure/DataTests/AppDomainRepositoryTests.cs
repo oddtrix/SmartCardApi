@@ -92,7 +92,7 @@ namespace Tests.Infrastructure.DataTests
             // Assert
             Assert.That(user, Is.EqualTo(expected).Using(new DomainUserEqualityComparer()), message: "Create method works incorrect");
         }
-        private static IEnumerable<DomainUser> ExpectedUsers =>
+        internal static IEnumerable<DomainUser> ExpectedUsers =>
             new[]
             {
                 new DomainUser

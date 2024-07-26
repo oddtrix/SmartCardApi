@@ -1,4 +1,5 @@
-﻿using SmartCardApi.Models.User;
+﻿using SmartCardApi.Models.Cards;
+using SmartCardApi.Models.User;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Tests.Infrastructure
@@ -25,4 +26,25 @@ namespace Tests.Infrastructure
         }
     }
 
+    internal class CardEqualityComparer : IEqualityComparer<Card>
+    {
+        public bool Equals([AllowNull] Card x, [AllowNull] Card y)
+        {
+            if (x == null && y == null)
+                return true;
+            if (x == null || y == null)
+                return false;
+
+            return x.Id == y.Id
+                && x.Word == y.Word
+                && x.UserId == y.UserId
+                && x.Translation == y.Translation
+                && x.LearningRate == y.LearningRate;
+        }
+
+        public int GetHashCode([DisallowNull] Card obj)
+        {
+            return obj.GetHashCode();
+        }
+    }
 }
